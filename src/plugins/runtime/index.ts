@@ -144,8 +144,14 @@ import {
 } from "../../line/send.js";
 import { monitorLineProvider } from "../../line/monitor.js";
 import { buildTemplateMessageFromPayload } from "../../line/template-messages.js";
+import {
+  createPluginLlmComplete,
+  createPluginLlmGetModel,
+  createPluginLlmIsAvailable,
+} from "./llm.js";
 
 import type { PluginRuntime } from "./types.js";
+import type { MoltbotConfig } from "../../config/config.js";
 
 let cachedVersion: string | null = null;
 
@@ -162,7 +168,8 @@ function resolveVersion(): string {
   }
 }
 
-export function createPluginRuntime(): PluginRuntime {
+export function createPluginRuntime(cfg?: MoltbotConfig): PluginRuntime {
+  const config = cfg ?? {};
   return {
     version: resolveVersion(),
     config: {
@@ -189,6 +196,11 @@ export function createPluginRuntime(): PluginRuntime {
       createMemoryGetTool,
       createMemorySearchTool,
       registerMemoryCli,
+    },
+    llm: {
+      complete: createPluginLlmComplete(config),
+      isAvailable: createPluginLlmIsAvailable(config),
+      getModel: createPluginLlmGetModel(config),
     },
     channel: {
       text: {
