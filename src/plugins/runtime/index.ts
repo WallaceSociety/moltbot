@@ -47,6 +47,7 @@ import { recordInboundSession } from "../../channels/session.js";
 import { monitorWebChannel } from "../../channels/web/index.js";
 import { registerMemoryCli } from "../../cli/memory-cli.js";
 import { loadConfig, writeConfigFile } from "../../config/config.js";
+import type { OpenClawConfig } from "../../config/types.openclaw.js";
 import {
   resolveChannelGroupPolicy,
   resolveChannelGroupRequireMention,
@@ -144,6 +145,11 @@ import { loginWeb } from "../../web/login.js";
 import { loadWebMedia } from "../../web/media.js";
 import { sendMessageWhatsApp, sendPollWhatsApp } from "../../web/outbound.js";
 import { formatNativeDependencyHint } from "./native-deps.js";
+import {
+  createPluginLlmComplete,
+  createPluginLlmGetModel,
+  createPluginLlmIsAvailable,
+} from "./llm.js";
 
 let cachedVersion: string | null = null;
 
@@ -162,7 +168,8 @@ function resolveVersion(): string {
   }
 }
 
-export function createPluginRuntime(): PluginRuntime {
+export function createPluginRuntime(cfg?: OpenClawConfig): PluginRuntime {
+  const config = cfg ?? {};
   return {
     version: resolveVersion(),
     config: {
@@ -189,6 +196,11 @@ export function createPluginRuntime(): PluginRuntime {
       createMemoryGetTool,
       createMemorySearchTool,
       registerMemoryCli,
+    },
+    llm: {
+      complete: createPluginLlmComplete(config),
+      isAvailable: createPluginLlmIsAvailable(config),
+      getModel: createPluginLlmGetModel(config),
     },
     channel: {
       text: {

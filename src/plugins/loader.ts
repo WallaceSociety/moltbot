@@ -187,7 +187,7 @@ export function loadOpenClawPlugins(options: PluginLoadOptions = {}): PluginRegi
   // Clear previously registered plugin commands before reloading
   clearPluginCommands();
 
-  const runtime = createPluginRuntime();
+  const runtime = createPluginRuntime(cfg);
   const { registry, createApi } = createPluginRegistry({
     logger,
     runtime,
