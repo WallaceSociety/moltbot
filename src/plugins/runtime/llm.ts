@@ -36,12 +36,11 @@ export function createPluginLlmComplete(cfg: MoltbotConfig) {
     const auth = await getApiKeyForModel({ model, cfg });
     const apiKey = requireApiKey(auth, model.provider);
 
-    const messages: Array<{ role: "system" | "user"; content: string; timestamp: number }> = [];
     const now = Date.now();
-    if (options?.systemPrompt) {
-      messages.push({ role: "system", content: options.systemPrompt, timestamp: now });
-    }
-    messages.push({ role: "user", content: prompt, timestamp: now });
+    const userContent = options?.systemPrompt
+      ? `${options.systemPrompt}\n\n${prompt}`
+      : prompt;
+    const messages = [{ role: "user" as const, content: userContent, timestamp: now }];
 
     const response = await completeSimple(
       model,
