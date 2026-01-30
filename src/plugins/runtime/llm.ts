@@ -1,10 +1,14 @@
-import { completeSimple } from "@mariozechner/pi-ai";
+import { completeSimple, type TextContent } from "@mariozechner/pi-ai";
 
 import type { MoltbotConfig } from "../../config/config.js";
 import { getApiKeyForModel, requireApiKey } from "../../agents/model-auth.js";
 import { resolveDefaultModelForAgent, modelKey } from "../../agents/model-selection.js";
 import { resolveModel } from "../../agents/pi-embedded-runner/model.js";
 import type { PluginLlmCompleteOptions, PluginLlmCompleteResult } from "./types.js";
+
+function isTextContentBlock(block: unknown): block is TextContent {
+  return typeof block === "object" && block !== null && (block as TextContent).type === "text";
+}
 
 /**
  * Create an LLM complete function bound to the given config.
@@ -32,21 +36,28 @@ export function createPluginLlmComplete(cfg: MoltbotConfig) {
     const auth = await getApiKeyForModel({ model, cfg });
     const apiKey = requireApiKey(auth, model.provider);
 
-    const messages: Array<{ role: "system" | "user"; content: string }> = [];
+    const messages: Array<{ role: "system" | "user"; content: string; timestamp: number }> = [];
+    const now = Date.now();
     if (options?.systemPrompt) {
-      messages.push({ role: "system", content: options.systemPrompt });
+      messages.push({ role: "system", content: options.systemPrompt, timestamp: now });
     }
-    messages.push({ role: "user", content: prompt });
+    messages.push({ role: "user", content: prompt, timestamp: now });
 
-    const response = await completeSimple({
+    const response = await completeSimple(
       model,
-      apiKey,
-      messages,
-      maxTokens: options?.maxTokens,
-    });
+      { messages },
+      { apiKey, maxTokens: options?.maxTokens },
+    );
+
+    const text = response.content
+      .filter(isTextContentBlock)
+      .map((block: TextContent) => block.text.trim())
+      .filter(Boolean)
+      .join(" ")
+      .trim();
 
     return {
-      text: response ?? "",
+      text,
       model: modelKey(modelRef.provider, modelRef.model),
     };
   };
