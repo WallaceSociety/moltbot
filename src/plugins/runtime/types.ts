@@ -168,6 +168,33 @@ type BuildTemplateMessageFromPayload =
   typeof import("../../line/template-messages.js").buildTemplateMessageFromPayload;
 type MonitorLineProvider = typeof import("../../line/monitor.js").monitorLineProvider;
 
+/**
+ * Options for LLM completion requests from plugins.
+ */
+export type PluginLlmCompleteOptions = {
+  /** Override the model (provider/model format, e.g., "openai/gpt-4o"). */
+  model?: string;
+  /** System prompt to prepend to the conversation. */
+  systemPrompt?: string;
+  /** Maximum tokens to generate. */
+  maxTokens?: number;
+};
+
+/**
+ * Result of an LLM completion request.
+ */
+export type PluginLlmCompleteResult = {
+  /** The generated text response. */
+  text: string;
+  /** The model that was used (provider/model format). */
+  model: string;
+  /** Token usage information if available. */
+  usage?: {
+    inputTokens?: number;
+    outputTokens?: number;
+  };
+};
+
 export type RuntimeLogger = {
   debug?: (message: string) => void;
   info: (message: string) => void;
@@ -201,6 +228,31 @@ export type PluginRuntime = {
     createMemoryGetTool: CreateMemoryGetTool;
     createMemorySearchTool: CreateMemorySearchTool;
     registerMemoryCli: RegisterMemoryCli;
+  };
+  /**
+   * LLM access for plugins. Uses OpenClaw's configured model and auth.
+   */
+  llm: {
+    /**
+     * Send a prompt to the configured LLM and get a text response.
+     * Uses the user's configured primary model and auth credentials.
+     *
+     * @param prompt - The user prompt to send
+     * @param options - Optional settings (model override, system prompt, maxTokens)
+     * @returns The LLM response text and metadata
+     */
+    complete: (
+      prompt: string,
+      options?: PluginLlmCompleteOptions,
+    ) => Promise<PluginLlmCompleteResult>;
+    /**
+     * Check if LLM access is available (model and auth are configured).
+     */
+    isAvailable: () => Promise<boolean>;
+    /**
+     * Get the currently configured primary model (provider/model format).
+     */
+    getModel: () => string;
   };
   channel: {
     text: {
