@@ -1,6 +1,6 @@
 import { completeSimple, type TextContent } from "@mariozechner/pi-ai";
 
-import type { MoltbotConfig } from "../../config/config.js";
+import type { OpenClawConfig } from "../../config/types.js";
 import { getApiKeyForModel, requireApiKey } from "../../agents/model-auth.js";
 import { resolveDefaultModelForAgent, modelKey } from "../../agents/model-selection.js";
 import { resolveModel } from "../../agents/pi-embedded-runner/model.js";
@@ -13,7 +13,7 @@ function isTextContentBlock(block: unknown): block is TextContent {
 /**
  * Create an LLM complete function bound to the given config.
  */
-export function createPluginLlmComplete(cfg: MoltbotConfig) {
+export function createPluginLlmComplete(cfg: OpenClawConfig) {
   return async (
     prompt: string,
     options?: PluginLlmCompleteOptions,
@@ -65,7 +65,7 @@ export function createPluginLlmComplete(cfg: MoltbotConfig) {
 /**
  * Check if LLM is available (model and auth configured).
  */
-export function createPluginLlmIsAvailable(cfg: MoltbotConfig) {
+export function createPluginLlmIsAvailable(cfg: OpenClawConfig) {
   return async (): Promise<boolean> => {
     try {
       const modelRef = resolveDefaultModelForAgent({ cfg });
@@ -89,7 +89,7 @@ export function createPluginLlmIsAvailable(cfg: MoltbotConfig) {
 /**
  * Get the currently configured primary model.
  */
-export function createPluginLlmGetModel(cfg: MoltbotConfig) {
+export function createPluginLlmGetModel(cfg: OpenClawConfig) {
   return (): string => {
     const modelRef = resolveDefaultModelForAgent({ cfg });
     return modelKey(modelRef.provider, modelRef.model);
@@ -98,7 +98,7 @@ export function createPluginLlmGetModel(cfg: MoltbotConfig) {
 
 function parseModelOverride(
   raw: string,
-  cfg: MoltbotConfig,
+  cfg: OpenClawConfig,
 ): { provider: string; model: string } {
   const trimmed = raw.trim();
   const slash = trimmed.indexOf("/");
